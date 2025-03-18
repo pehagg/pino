@@ -1,0 +1,89 @@
+package pino
+
+import "core:testing"
+
+@(test)
+should_push_and_pop :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	push(&vm, 42)
+	testing.expect_value(t, depth(vm), 1)
+	testing.expect_value(t, pop(&vm), 42)
+	testing.expect_value(t, depth(vm), 0)
+}
+
+@(test)
+should_peek :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	push(&vm, 42)
+	testing.expect_value(t, depth(vm), 1)
+	testing.expect_value(t, peek(vm), 42)
+	testing.expect_value(t, depth(vm), 1)
+}
+
+@(test)
+should_log_invalid_opcode :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	evaluate(&vm, []u8{0xff})
+	testing.expect_value(t, depth(vm), 0)
+}
+
+@(test)
+should_evaluate_literal :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	evaluate(&vm, []u8{OP_LIT, 0xff, OP_BRK})
+	testing.expect_value(t, depth(vm), 1)
+}
+
+@(test)
+should_evaluate_dup :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	evaluate(&vm, []u8{OP_LIT, 0x02, OP_DUP, OP_BRK})
+	testing.expect_value(t, depth(vm), 2)
+}
+
+@(test)
+should_evaluate_swap :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	evaluate(&vm, []u8{OP_LIT, 0x02, OP_LIT, 0x03, OP_SWP, OP_BRK})
+	testing.expect_value(t, pop(&vm), 2)
+	testing.expect_value(t, pop(&vm), 3)
+	testing.expect_value(t, depth(vm), 0)
+}
+
+@(test)
+should_evaluate_over :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	evaluate(&vm, []u8{OP_LIT, 0x02, OP_LIT, 0x03, OP_OVR, OP_BRK})
+	testing.expect_value(t, pop(&vm), 2)
+	testing.expect_value(t, pop(&vm), 3)
+	testing.expect_value(t, pop(&vm), 2)
+	testing.expect_value(t, depth(vm), 0)
+}
+
+@(test)
+should_evaluate_rotate :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	evaluate(&vm, []u8{OP_LIT, 0x02, OP_LIT, 0x03, OP_LIT, 0x04, OP_ROT, OP_BRK})
+	testing.expect_value(t, pop(&vm), 3)
+	testing.expect_value(t, pop(&vm), 2)
+	testing.expect_value(t, pop(&vm), 4)
+	testing.expect_value(t, depth(vm), 0)
+}
+
+@(test)
+should_evaluate_nip :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	evaluate(&vm, []u8{OP_LIT, 0x02, OP_LIT, 0x03, OP_NIP, OP_BRK})
+	testing.expect_value(t, pop(&vm), 3)
+	testing.expect_value(t, depth(vm), 0)
+}
+
+@(test)
+should_evaluate_tuck :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	evaluate(&vm, []u8{OP_LIT, 0x02, OP_LIT, 0x03, OP_TCK, OP_BRK})
+	testing.expect_value(t, pop(&vm), 3)
+	testing.expect_value(t, pop(&vm), 2)
+	testing.expect_value(t, pop(&vm), 3)
+	testing.expect_value(t, depth(vm), 0)
+}
