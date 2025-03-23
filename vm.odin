@@ -21,6 +21,9 @@ OP_MUL :: 0x22 // Multiply two top-most items (a b -- a*b)
 OP_DIV :: 0x23 // Divide two top-most items (a b -- a/b)
 OP_CLC :: 0x30 // Reserved
 OP_SEC :: 0x31 // Reserved
+OP_JMP :: 0x40 // Jump to address explicitly
+OP_JSR :: 0x41 // Jump to subroutine; pushes return address to rst 
+OP_RTS :: 0x42 // Return from subroutine
 OP_HCF :: 0xff // Halt execution
 
 Address :: distinct u16
@@ -37,8 +40,10 @@ StatusRegister :: bit_set[StatusFlag;u8]
 VirtualMachine :: struct {
 	wst:    [256]u8,
 	sp:     u8,
+	rst:    [256]Address,
+	rp:     u8,
 	mem:    [65536]u8, // 64k
-	pc:     u16,
+	pc:     Address,
 	status: StatusRegister,
 }
 
@@ -183,6 +188,19 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 			}
 			push(vm, a / b)
 			update_status_flags(vm)
+		case OP_JMP:
+			hi := Address(fetch(vm)) << 8
+			lo := Address(fetch(vm))
+			vm.pc = hi | lo
+		case OP_JSR:
+			hi := Address(fetch(vm)) << 8
+			lo := Address(fetch(vm))
+			vm.rst[vm.rp] = vm.pc
+			vm.rp += 1
+			vm.pc = hi | lo
+		case OP_RTS:
+			vm.rp -= 1
+			vm.pc = vm.rst[vm.rp]
 		case OP_HCF:
 			log.warn("halted")
 			return false

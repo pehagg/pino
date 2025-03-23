@@ -167,3 +167,24 @@ should_evaluate_division_by_zero :: proc(t: ^testing.T) {
 	testing.expect(t, !ok)
 	testing.expect_value(t, depth(vm), 0)
 }
+
+@(test)
+should_evaluate_explicit_jump :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	ok := evaluate(&vm, []u8{OP_JMP, 0x01, 0x05, OP_LIT, 0x02, OP_LIT, 0x03, OP_BRK})
+	testing.expect(t, ok)
+	testing.expect_value(t, depth(vm), 1)
+	testing.expect_value(t, peek(vm), 0x03)
+}
+
+@(test)
+should_evaluate_jump_to_subroutine_and_back :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	ok := evaluate(
+		&vm,
+		[]u8{OP_JSR, 0x01, 0x06, OP_LIT, 0x02, OP_BRK, OP_LIT, 0x03, OP_RTS, OP_BRK},
+	)
+	testing.expect(t, ok)
+	testing.expect_value(t, depth(vm), 2)
+	testing.expect_value(t, peek(vm), 0x02)
+}
