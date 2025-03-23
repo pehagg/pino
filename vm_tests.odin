@@ -208,3 +208,57 @@ should_evaluate_jump_to_subroutine_and_back :: proc(t: ^testing.T) {
 	testing.expect_value(t, depth(vm), 2)
 	testing.expect_value(t, peek(vm), 0x02)
 }
+
+@(test)
+should_evaluate_compare_true :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	ok := evaluate(&vm, []u8{OP_LIT, 0x02, OP_CMP, 0x02, OP_BRK})
+	testing.expect(t, ok)
+	testing.expect_value(t, depth(vm), 1)
+	testing.expect_value(t, StatusFlag.Z in vm.status, true)
+}
+
+@(test)
+should_evaluate_compare_false :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	ok := evaluate(&vm, []u8{OP_LIT, 0x02, OP_CMP, 0x03, OP_BRK})
+	testing.expect(t, ok)
+	testing.expect_value(t, depth(vm), 1)
+	testing.expect_value(t, StatusFlag.Z in vm.status, false)
+}
+
+@(test)
+should_evaluate_branch_if_equal_true :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	ok := evaluate(&vm, []u8{OP_LIT, 0x02, OP_CMP, 0x02, OP_BEQ, 0x01, 0x09, OP_LIT, 0x03, OP_BRK})
+	testing.expect(t, ok)
+	testing.expect_value(t, depth(vm), 1)
+	testing.expect_value(t, peek(vm), 0x02)
+}
+
+@(test)
+should_evaluate_branch_if_equal_false :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	ok := evaluate(&vm, []u8{OP_LIT, 0x02, OP_CMP, 0x03, OP_BEQ, 0x01, 0x09, OP_LIT, 0x03, OP_BRK})
+	testing.expect(t, ok)
+	testing.expect_value(t, depth(vm), 2)
+	testing.expect_value(t, peek(vm), 0x03)
+}
+
+@(test)
+should_evaluate_branch_if_not_equal_true :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	ok := evaluate(&vm, []u8{OP_LIT, 0x02, OP_CMP, 0x03, OP_BNE, 0x01, 0x09, OP_LIT, 0x03, OP_BRK})
+	testing.expect(t, ok)
+	testing.expect_value(t, depth(vm), 1)
+	testing.expect_value(t, peek(vm), 0x02)
+}
+
+@(test)
+should_evaluate_branch_if_not_equal_false :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	ok := evaluate(&vm, []u8{OP_LIT, 0x02, OP_CMP, 0x02, OP_BNE, 0x01, 0x09, OP_LIT, 0x03, OP_BRK})
+	testing.expect(t, ok)
+	testing.expect_value(t, depth(vm), 2)
+	testing.expect_value(t, peek(vm), 0x03)
+}

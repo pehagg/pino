@@ -26,6 +26,9 @@ OP_SEC :: 0x31 // Reserved
 OP_JMP :: 0x40 // Jump to address explicitly
 OP_JSR :: 0x41 // Jump to subroutine; pushes return address to rst 
 OP_RTS :: 0x42 // Return from subroutine
+OP_CMP :: 0x43 // Compare value with top-most value (not consumed), set N and Z flags accordingly 
+OP_BEQ :: 0x44 // Branch to address if top-most value is non-zero (a b -- a), where b != 0
+OP_BNE :: 0x45 // Branch to address if top-most value is zero (a b -- a), where b == 0
 OP_HCF :: 0xff // Halt execution
 
 Address :: distinct u16
@@ -211,6 +214,32 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 		case OP_RTS:
 			vm.rp -= 1
 			vm.pc = vm.rst[vm.rp]
+		case OP_CMP:
+			a := peek(vm^)
+			b := fetch(vm)
+			result := a - b
+			if result < 0 {
+				vm.status += {.N}
+			} else {
+				vm.status -= {.N}
+			}
+			if result == 0 {
+				vm.status += {.Z}
+			} else {
+				vm.status -= {.Z}
+			}
+		case OP_BEQ:
+			hi := Address(fetch(vm)) << 8
+			lo := Address(fetch(vm))
+			if .Z in vm.status {
+				vm.pc = hi | lo
+			}
+		case OP_BNE:
+			hi := Address(fetch(vm)) << 8
+			lo := Address(fetch(vm))
+			if !(.Z in vm.status) {
+				vm.pc = hi | lo
+			}
 		case OP_HCF:
 			log.warn("halted")
 			return false
