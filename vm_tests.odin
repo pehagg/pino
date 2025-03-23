@@ -87,3 +87,19 @@ should_evaluate_tuck :: proc(t: ^testing.T) {
 	testing.expect_value(t, pop(&vm), 3)
 	testing.expect_value(t, depth(vm), 0)
 }
+
+@(test)
+should_evaluate_write_and_load_zero_page :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	evaluate(&vm, []u8{OP_LIT, 0x42, OP_STZ, 0x01, OP_LDZ, 0x01, OP_BRK})
+	testing.expect_value(t, read(vm, 0x0001), 0x42)
+	testing.expect_value(t, peek(vm), 0x42)
+}
+
+@(test)
+should_evaluate_write_and_load :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	evaluate(&vm, []u8{OP_LIT, 0x42, OP_STA, 0xff, 0x01, OP_LDA, 0xff, 0x01, OP_BRK})
+	testing.expect_value(t, read(vm, 0xff01), 0x42)
+	testing.expect_value(t, peek(vm), 0x42)
+}
