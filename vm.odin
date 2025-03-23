@@ -91,7 +91,7 @@ update_status_flags :: proc(vm: ^VirtualMachine) {
 	}
 }
 
-evaluate :: proc(vm: ^VirtualMachine, code: []u8) {
+evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 	for i in 0 ..< len(code) {
 		vm.mem[0x0100 + i] = code[i]
 	}
@@ -103,7 +103,7 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) {
 		op := fetch(vm)
 		switch op {
 		case OP_BRK:
-			return
+			return true
 		case OP_LIT:
 			literal := fetch(vm)
 			push(vm, literal)
@@ -179,16 +179,16 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) {
 			a := pop(vm)
 			if (b == 0) {
 				log.warn("division by zero")
-				return
+				return false
 			}
 			push(vm, a / b)
 			update_status_flags(vm)
 		case OP_HCF:
 			log.warn("halted")
-			return
+			return false
 		case:
 			log.warnf("invalid opcode: 0x%02x", op)
-			return
+			return false
 		}
 	}
 }
