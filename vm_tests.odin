@@ -169,6 +169,26 @@ should_evaluate_division_by_zero :: proc(t: ^testing.T) {
 }
 
 @(test)
+should_evaluate_increment :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	ok := evaluate(&vm, []u8{OP_LIT, 0x02, OP_INC, OP_BRK})
+	testing.expect(t, ok)
+	testing.expect_value(t, peek(vm), 0x03)
+	testing.expect_value(t, StatusFlag.N in vm.status, false)
+	testing.expect_value(t, StatusFlag.Z in vm.status, false)
+}
+
+@(test)
+should_evaluate_decrement :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	ok := evaluate(&vm, []u8{OP_LIT, 0x02, OP_DEC, OP_BRK})
+	testing.expect(t, ok)
+	testing.expect_value(t, peek(vm), 0x01)
+	testing.expect_value(t, StatusFlag.N in vm.status, false)
+	testing.expect_value(t, StatusFlag.Z in vm.status, false)
+}
+
+@(test)
 should_evaluate_explicit_jump :: proc(t: ^testing.T) {
 	vm: VirtualMachine
 	ok := evaluate(&vm, []u8{OP_JMP, 0x01, 0x05, OP_LIT, 0x02, OP_LIT, 0x03, OP_BRK})

@@ -19,6 +19,8 @@ OP_ADD :: 0x20 // Add two top-most items (a b -- a+b)
 OP_SUB :: 0x21 // Subtract two top-most items (a b -- a-b)
 OP_MUL :: 0x22 // Multiply two top-most items (a b -- a*b)
 OP_DIV :: 0x23 // Divide two top-most items (a b -- a/b)
+OP_INC :: 0x24 // Increment top-most value by one (a -- a+1)
+OP_DEC :: 0x25 // Decrement top-most value by one (a -- a-1)
 OP_CLC :: 0x30 // Reserved
 OP_SEC :: 0x31 // Reserved
 OP_JMP :: 0x40 // Jump to address explicitly
@@ -187,6 +189,14 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 				return false
 			}
 			push(vm, a / b)
+			update_status_flags(vm)
+		case OP_INC:
+			a := pop(vm)
+			push(vm, a + 1)
+			update_status_flags(vm)
+		case OP_DEC:
+			a := pop(vm)
+			push(vm, a - 1)
 			update_status_flags(vm)
 		case OP_JMP:
 			hi := Address(fetch(vm)) << 8
