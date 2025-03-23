@@ -15,14 +15,31 @@ OP_LDZ :: 0x11 // Load value (1 byte) from zero page to top of stack
 OP_STZ :: 0x12 // Store value (1 byte) from stack to zero page
 OP_LDA :: 0x13 // Load value (1 byte) from memory to top of stack
 OP_STA :: 0x14 // Store value (1 byte) from stack to memory
+OP_ADD :: 0x20 // Add two top-most items (a b -- a+b)
+OP_SUB :: 0x21 // Subtract two top-most items (a b -- a-b)
+OP_MUL :: 0x22 // Multiply two top-most items (a b -- a*b)
+OP_DIV :: 0x23 // Divide two top-most items (a b -- a/b)
+OP_CLC :: 0x30 // Reserved
+OP_SEC :: 0x31 // Reserved
+OP_HCF :: 0xff // Halt execution
 
 Address :: distinct u16
 
+StatusFlag :: enum {
+	N, // Negative
+	V, // Overflow
+	Z, // Zero
+	C, // Carry
+}
+
+StatusRegister :: bit_set[StatusFlag;u8]
+
 VirtualMachine :: struct {
-	wst: [256]u8,
-	sp:  u8,
-	mem: [65536]u8, // 64k
-	pc:  u16,
+	wst:    [256]u8,
+	sp:     u8,
+	mem:    [65536]u8, // 64k
+	pc:     u16,
+	status: StatusRegister,
 }
 
 push :: proc(vm: ^VirtualMachine, value: u8) {
@@ -55,6 +72,23 @@ fetch :: proc(vm: ^VirtualMachine) -> u8 {
 	op := vm.mem[vm.pc]
 	vm.pc += 1
 	return op
+}
+
+update_status_flags :: proc(vm: ^VirtualMachine) {
+	value := peek(vm^)
+
+	// negative number if MSB is one
+	if value & 0x80 == 0x80 {
+		vm.status += {.N}
+	} else {
+		vm.status -= {.N}
+	}
+
+	if value == 0 {
+		vm.status += {.Z}
+	} else {
+		vm.status -= {.Z}
+	}
 }
 
 evaluate :: proc(vm: ^VirtualMachine, code: []u8) {
@@ -125,6 +159,33 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) {
 			lo := Address(fetch(vm))
 			value := pop(vm)
 			write(vm, hi | lo, value)
+		case OP_ADD:
+			b := pop(vm)
+			a := pop(vm)
+			push(vm, a + b)
+			update_status_flags(vm)
+		case OP_SUB:
+			b := pop(vm)
+			a := pop(vm)
+			push(vm, a - b)
+			update_status_flags(vm)
+		case OP_MUL:
+			b := pop(vm)
+			a := pop(vm)
+			push(vm, a * b)
+			update_status_flags(vm)
+		case OP_DIV:
+			b := pop(vm)
+			a := pop(vm)
+			if (b == 0) {
+				log.warn("division by zero")
+				return
+			}
+			push(vm, a / b)
+			update_status_flags(vm)
+		case OP_HCF:
+			log.warn("halted")
+			return
 		case:
 			log.warnf("invalid opcode: 0x%02x", op)
 			return
