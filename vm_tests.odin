@@ -262,3 +262,29 @@ should_evaluate_branch_if_not_equal_false :: proc(t: ^testing.T) {
 	testing.expect_value(t, depth(vm), 2)
 	testing.expect_value(t, peek(vm), 0x03)
 }
+
+@(test)
+should_evaluate_fibonacci :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	ok := evaluate(
+		&vm,
+		[]u8 {
+			OP_LIT,
+			0x00,
+			OP_LIT,
+			0x01,
+			OP_OVR,
+			OP_OVR,
+			OP_ADD,
+			OP_CMP,
+			0xe9,
+			OP_BNE,
+			0x01,
+			0x04,
+			OP_BRK,
+		},
+	)
+	testing.expect(t, ok)
+	testing.expect_value(t, depth(vm), 14)
+
+}
