@@ -107,7 +107,7 @@ scan_identifier :: proc(scanner: ^Scanner) -> (token: Token, success: bool) {
 	lexeme := strings.to_string(sb)
 	token = {
 		kind     = strings.ends_with(lexeme, ":") ? .Label : .Mnemonic,
-		lexeme   = strings.ends_with(lexeme, ":") ? lexeme : strings.to_upper(lexeme, context.temp_allocator),
+		lexeme   = strings.ends_with(lexeme, ":") ? lexeme[:len(lexeme) - 1] : strings.to_upper(lexeme, context.temp_allocator),
 		position = position,
 	}
 	success = true
