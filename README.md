@@ -30,7 +30,6 @@ loop:
 
 ### Milestone: 0.1.0 "Unconference Edition"
 
-- [ ] feat: support for text output [vm]
 - [ ] feat: support for comments [compiler]
 - [ ] feat: support for drawing basic shapes [vm] [emulator]
 - [ ] feat: support for for data blocks and variables [compiler]
@@ -40,5 +39,6 @@ loop:
 - [ ] chore: clean up code using Karl's book as guidance [compiler] [emulator]
 - [ ] refactor: rename LIT to PSH [compiler]
 - [ ] feat: proper compiler errors [compiler]
+- [x] feat: support for text output [vm]
 - [x] feat: compile program file (assy) into binary (rom) [compiler]
 - [x] feat: run rom file [emulator]

@@ -1,5 +1,6 @@
 package vm
 
+import "core:fmt"
 import "core:log"
 
 OP_BRK :: 0x00 // Break
@@ -32,6 +33,8 @@ OP_BNE :: 0x45 // Branch to address if top-most value is zero (a b -- a), where 
 OP_HCF :: 0xff // Halt execution
 
 Address :: distinct u16
+
+ADDR_STDOUT :: 0xff00
 
 StatusFlag :: enum {
 	N, // Negative
@@ -76,6 +79,18 @@ read :: proc(vm: VirtualMachine, address: Address) -> u8 {
 
 write :: proc(vm: ^VirtualMachine, address: Address, value: u8) {
 	vm.mem[address] = value
+}
+
+call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
+	switch address {
+	case ADDR_STDOUT:
+		char := pop(vm)
+		fmt.print(rune(char))
+		return true
+	case:
+		log.warn("invalid call to address:", address)
+		return false
+	}
 }
 
 fetch :: proc(vm: ^VirtualMachine) -> u8 {
@@ -208,6 +223,14 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 		case OP_JSR:
 			hi := Address(fetch(vm)) << 8
 			lo := Address(fetch(vm))
+			address := hi | lo
+
+			// Call Kernal if address is greater or equal to 0xff00
+			if address >= 0xff00 {
+				call(vm, address) or_return
+				continue
+			}
+
 			vm.rst[vm.rp] = vm.pc
 			vm.rp += 1
 			vm.pc = hi | lo

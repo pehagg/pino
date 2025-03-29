@@ -100,18 +100,26 @@ parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool)
 				append(&bytecode, vm.OP_JMP)
 				next(&parser)
 				address := labels[parser.current.lexeme]
-				hi := u8(address) << 8
+				hi := u8(address >> 8)
 				lo := u8(address)
 				append(&bytecode, hi)
 				append(&bytecode, lo)
 			case "JSR":
 				append(&bytecode, vm.OP_JSR)
 				next(&parser)
-				address := labels[parser.current.lexeme]
-				hi := u8(address) << 8
-				lo := u8(address)
-				append(&bytecode, hi)
-				append(&bytecode, lo)
+				if strings.starts_with(parser.current.lexeme, "$") {
+					address := parse_number(parser.current) or_return
+					hi := u8(address >> 8)
+					lo := u8(address)
+					append(&bytecode, hi)
+					append(&bytecode, lo)
+				} else {
+					address := labels[parser.current.lexeme]
+					hi := u8(address >> 8)
+					lo := u8(address)
+					append(&bytecode, hi)
+					append(&bytecode, lo)
+				}
 			case "RTS":
 				append(&bytecode, vm.OP_RTS)
 			case "CMP":

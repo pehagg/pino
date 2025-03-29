@@ -4,9 +4,12 @@ import "../../core/parser"
 import "../../core/scanner"
 import "../../core/vm"
 import "core:fmt"
+import "core:log"
 import "core:os"
 
 main :: proc() {
+	context.logger = log.create_console_logger()
+
 	if len(os.args) < 3 {
 		fmt.eprintln("usage: compiler INPUT OUTPUT")
 		return
