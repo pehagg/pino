@@ -17,3 +17,8 @@ loop:
   bne loop  ; nope, go back
   brk       ;
 ```
+
+## Tasks
+
+- [x] feat: compile program file (assy) into binary (rom)
+- [ ] feat: run rom file
