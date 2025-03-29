@@ -21,4 +21,4 @@ loop:
 ## Tasks
 
 - [x] feat: compile program file (assy) into binary (rom)
-- [ ] feat: run rom file
+- [x] feat: run rom file
