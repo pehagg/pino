@@ -20,5 +20,25 @@ loop:
 
 ## Tasks
 
-- [x] feat: compile program file (assy) into binary (rom)
-- [x] feat: run rom file
+### Milestone: 0.3.0 "Debugger"
+
+- [ ] epic: debugger support [emulator]
+
+### Milestone: 0.2.0 "Strings"
+
+- [ ] epic: support for strings [vm] [compiler]
+
+### Milestone: 0.1.0 "Unconference Edition"
+
+- [ ] feat: support for text output [vm]
+- [ ] feat: support for comments [compiler]
+- [ ] feat: support for drawing basic shapes [vm] [emulator]
+- [ ] feat: support for for data blocks and variables [compiler]
+- [ ] feat: support for drawing sprites [vm] [emulator]
+- [ ] refactor: proper literal handling [scanner]
+- [ ] refactor: use proper allocators [compiler] [emulator]
+- [ ] chore: clean up code using Karl's book as guidance [compiler] [emulator]
+- [ ] refactor: rename LIT to PSH [compiler]
+- [ ] feat: proper compiler errors [compiler]
+- [x] feat: compile program file (assy) into binary (rom) [compiler]
+- [x] feat: run rom file [emulator]
