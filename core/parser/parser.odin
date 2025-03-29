@@ -1,26 +1,28 @@
-package pino
+package parser
 
+import "../scanner"
+import "../vm"
 import "core:log"
 import "core:strconv"
 import "core:strings"
 
 Parser :: struct {
-	tokens:   []Token,
+	tokens:   []scanner.Token,
 	position: int,
-	current:  Token,
+	current:  scanner.Token,
 }
 
-parse :: proc(tokens: []Token) -> (bytecode: [dynamic]u8, success: bool) {
-	offset: Address = 0x0100
-	labels: map[string]Address
+parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool) {
+	offset: vm.Address = 0x0100
+	labels: map[string]vm.Address
 	defer delete(labels)
 
-	pass1: [dynamic]Token
+	pass1: [dynamic]scanner.Token
 	defer delete(pass1)
 
 	for token, index in tokens {
 		if token.kind == .Label {
-			labels[token.lexeme] = offset + Address(index - len(labels))
+			labels[token.lexeme] = offset + vm.Address(index - len(labels))
 		} else {
 			append(&pass1, token)
 		}
@@ -36,38 +38,38 @@ parse :: proc(tokens: []Token) -> (bytecode: [dynamic]u8, success: bool) {
 		if parser.current.kind == .Mnemonic {
 			switch parser.current.lexeme {
 			case "BRK":
-				append(&bytecode, OP_BRK)
+				append(&bytecode, vm.OP_BRK)
 			case "LIT":
-				append(&bytecode, OP_LIT)
+				append(&bytecode, vm.OP_LIT)
 				next(&parser)
 				number := parse_number(parser.current) or_return
 				append(&bytecode, u8(number))
 			case "DRP":
-				append(&bytecode, OP_DRP)
+				append(&bytecode, vm.OP_DRP)
 			case "DUP":
-				append(&bytecode, OP_DUP)
+				append(&bytecode, vm.OP_DUP)
 			case "SWP":
-				append(&bytecode, OP_SWP)
+				append(&bytecode, vm.OP_SWP)
 			case "OVR":
-				append(&bytecode, OP_OVR)
+				append(&bytecode, vm.OP_OVR)
 			case "ROT":
-				append(&bytecode, OP_ROT)
+				append(&bytecode, vm.OP_ROT)
 			case "NIP":
-				append(&bytecode, OP_NIP)
+				append(&bytecode, vm.OP_NIP)
 			case "TCK":
-				append(&bytecode, OP_TCK)
+				append(&bytecode, vm.OP_TCK)
 			case "LDZ":
-				append(&bytecode, OP_LDZ)
+				append(&bytecode, vm.OP_LDZ)
 				next(&parser)
 				address := parse_number(parser.current) or_return
 				append(&bytecode, u8(address))
 			case "STZ":
-				append(&bytecode, OP_STZ)
+				append(&bytecode, vm.OP_STZ)
 				next(&parser)
 				address := parse_number(parser.current) or_return
 				append(&bytecode, u8(address))
 			case "LDA":
-				append(&bytecode, OP_LDA)
+				append(&bytecode, vm.OP_LDA)
 				next(&parser)
 				address := parse_number(parser.current) or_return
 				hi := u8(address) << 8
@@ -75,7 +77,7 @@ parse :: proc(tokens: []Token) -> (bytecode: [dynamic]u8, success: bool) {
 				append(&bytecode, hi)
 				append(&bytecode, lo)
 			case "STA":
-				append(&bytecode, OP_STA)
+				append(&bytecode, vm.OP_STA)
 				next(&parser)
 				address := parse_number(parser.current) or_return
 				hi := u8(address) << 8
@@ -83,19 +85,19 @@ parse :: proc(tokens: []Token) -> (bytecode: [dynamic]u8, success: bool) {
 				append(&bytecode, hi)
 				append(&bytecode, lo)
 			case "ADD":
-				append(&bytecode, OP_ADD)
+				append(&bytecode, vm.OP_ADD)
 			case "SUB":
-				append(&bytecode, OP_SUB)
+				append(&bytecode, vm.OP_SUB)
 			case "MUL":
-				append(&bytecode, OP_MUL)
+				append(&bytecode, vm.OP_MUL)
 			case "DIV":
-				append(&bytecode, OP_DIV)
+				append(&bytecode, vm.OP_DIV)
 			case "INC":
-				append(&bytecode, OP_INC)
+				append(&bytecode, vm.OP_INC)
 			case "DEC":
-				append(&bytecode, OP_DEC)
+				append(&bytecode, vm.OP_DEC)
 			case "JMP":
-				append(&bytecode, OP_JMP)
+				append(&bytecode, vm.OP_JMP)
 				next(&parser)
 				address := labels[parser.current.lexeme]
 				hi := u8(address) << 8
@@ -103,7 +105,7 @@ parse :: proc(tokens: []Token) -> (bytecode: [dynamic]u8, success: bool) {
 				append(&bytecode, hi)
 				append(&bytecode, lo)
 			case "JSR":
-				append(&bytecode, OP_JSR)
+				append(&bytecode, vm.OP_JSR)
 				next(&parser)
 				address := labels[parser.current.lexeme]
 				hi := u8(address) << 8
@@ -111,14 +113,14 @@ parse :: proc(tokens: []Token) -> (bytecode: [dynamic]u8, success: bool) {
 				append(&bytecode, hi)
 				append(&bytecode, lo)
 			case "RTS":
-				append(&bytecode, OP_RTS)
+				append(&bytecode, vm.OP_RTS)
 			case "CMP":
-				append(&bytecode, OP_CMP)
+				append(&bytecode, vm.OP_CMP)
 				next(&parser)
 				number := parse_number(parser.current) or_return
 				append(&bytecode, u8(number))
 			case "BEQ":
-				append(&bytecode, OP_BEQ)
+				append(&bytecode, vm.OP_BEQ)
 				next(&parser)
 				// FIXME: labels are parsed as mnemonics
 				address := labels[strings.to_lower(parser.current.lexeme, context.temp_allocator)]
@@ -127,7 +129,7 @@ parse :: proc(tokens: []Token) -> (bytecode: [dynamic]u8, success: bool) {
 				append(&bytecode, hi)
 				append(&bytecode, lo)
 			case "BNE":
-				append(&bytecode, OP_BNE)
+				append(&bytecode, vm.OP_BNE)
 				next(&parser)
 				// FIXME: labels are parsed as mnemonics
 				address := labels[strings.to_lower(parser.current.lexeme, context.temp_allocator)]
@@ -136,7 +138,7 @@ parse :: proc(tokens: []Token) -> (bytecode: [dynamic]u8, success: bool) {
 				append(&bytecode, hi)
 				append(&bytecode, lo)
 			case "HCF":
-				append(&bytecode, OP_HCF)
+				append(&bytecode, vm.OP_HCF)
 			}
 		}
 
@@ -147,7 +149,7 @@ parse :: proc(tokens: []Token) -> (bytecode: [dynamic]u8, success: bool) {
 	}
 }
 
-parse_number :: proc(token: Token) -> (n: int, success: bool) {
+parse_number :: proc(token: scanner.Token) -> (n: int, success: bool) {
 	if token.kind != .Number {
 		return {}, false
 	}

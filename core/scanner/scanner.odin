@@ -1,4 +1,4 @@
-package pino
+package scanner
 
 import "core:log"
 import "core:strconv"

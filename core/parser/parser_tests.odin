@@ -1,5 +1,6 @@
-package pino
+package parser
 
+import "../scanner"
 import "core:log"
 import "core:testing"
 
@@ -16,7 +17,7 @@ should_parse :: proc(t: ^testing.T) {
       bne loop
       brk
   `
-	tokens, scan_success := scan(source)
+	tokens, scan_success := scanner.scan(source)
 	defer delete(tokens)
 
 	testing.expect(t, scan_success)

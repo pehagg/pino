@@ -1,11 +1,14 @@
-package pino
+package compiler
 
+import "../../core/parser"
+import "../../core/scanner"
+import "../../core/vm"
 import "core:fmt"
 import "core:os"
 
 main :: proc() {
 	if len(os.args) < 3 {
-		fmt.eprintln("use: compiler INPUT OUTPUT")
+		fmt.eprintln("usage: compiler INPUT OUTPUT")
 		return
 	}
 
@@ -16,14 +19,14 @@ main :: proc() {
 		return
 	}
 
-	tokens, scan_ok := scan(string(source))
+	tokens, scan_ok := scanner.scan(string(source))
 	defer delete(tokens)
 	if !scan_ok {
 		fmt.eprintln("error scanning code")
 		return
 	}
 
-	bytecode, parse_ok := parse(tokens[:])
+	bytecode, parse_ok := parser.parse(tokens[:])
 	defer delete(bytecode)
 	if !parse_ok {
 		fmt.eprintln("error parsing code")
