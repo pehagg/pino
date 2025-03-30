@@ -2,6 +2,7 @@ package vm
 
 import "core:fmt"
 import "core:log"
+import rl "vendor:raylib"
 
 OP_BRK :: 0x00 // Break
 OP_LIT :: 0x01 // Push literal (1 byte) to stack ( -- a)
@@ -34,7 +35,16 @@ OP_HCF :: 0xff // Halt execution
 
 Address :: distinct u16
 
-ADDR_STDOUT :: 0xff00
+ADDR_CHROUT :: 0xff00
+ADDR_BGNDRW :: 0xff01
+ADDR_ENDDRW :: 0xff02
+ADDR_PIXOUT :: 0xff03
+ADDR_LINOUT :: 0xff04
+
+PALETTE_BLACK :: 0x00
+PALETTE_WHITE :: 0x01
+PALETTE_RED :: 0x02
+PALETTE_CYAN :: 0x03
 
 StatusFlag :: enum {
 	N, // Negative
@@ -83,14 +93,31 @@ write :: proc(vm: ^VirtualMachine, address: Address, value: u8) {
 
 call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 	switch address {
-	case ADDR_STDOUT:
+	case ADDR_CHROUT:
 		char := pop(vm)
 		fmt.print(rune(char))
-		return true
+	case ADDR_BGNDRW:
+		rl.BeginDrawing()
+	case ADDR_ENDDRW:
+		rl.EndDrawing()
+	case ADDR_PIXOUT:
+		palette_color := pop(vm)
+		y := pop(vm)
+		x := pop(vm)
+		rl.DrawPixel(i32(x), i32(y), color(palette_color))
+	case ADDR_LINOUT:
+		palette_color := pop(vm)
+		end_y := pop(vm)
+		end_x := pop(vm)
+		start_y := pop(vm)
+		start_x := pop(vm)
+		rl.DrawLine(i32(start_x), i32(start_y), i32(end_x), i32(end_y), color(palette_color))
 	case:
 		log.warn("invalid call to address:", address)
 		return false
 	}
+
+	return true
 }
 
 fetch :: proc(vm: ^VirtualMachine) -> u8 {
@@ -124,7 +151,15 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 	vm.sp = 0
 	vm.pc = 0x0100
 
+	rl.InitWindow(320, 200, "Pino")
+	rl.SetTargetFPS(60)
+	defer rl.CloseWindow()
+
 	for {
+		if rl.WindowShouldClose() {
+			return true
+		}
+
 		op := fetch(vm)
 		switch op {
 		case OP_BRK:
@@ -270,5 +305,20 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 			log.warnf("invalid opcode: 0x%02x", op)
 			return false
 		}
+	}
+}
+
+color :: proc(palette: u8) -> rl.Color {
+	switch palette {
+	case PALETTE_BLACK:
+		return rl.BLACK
+	case PALETTE_WHITE:
+		return rl.WHITE
+	case PALETTE_RED:
+		return rl.RED
+	case PALETTE_CYAN:
+		return rl.Color{0x37, 0x84, 0x8b, 0xff}
+	case:
+		return rl.BLACK
 	}
 }

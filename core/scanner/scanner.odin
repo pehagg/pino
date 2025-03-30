@@ -1,6 +1,7 @@
 package scanner
 
 import "core:log"
+import "core:slice"
 import "core:strconv"
 import "core:strings"
 import "core:unicode"
@@ -21,6 +22,37 @@ TokenKind :: enum {
 	Number,
 	Mnemonic,
 	Label,
+}
+
+mnemonics :: []string {
+	"BRK",
+	"LIT",
+	"DRP",
+	"DUP",
+	"SWP",
+	"OVR",
+	"ROT",
+	"NIP",
+	"TCK",
+	"LDZ",
+	"STZ",
+	"LDA",
+	"STA",
+	"ADD",
+	"SUB",
+	"MUK",
+	"DIV",
+	"INC",
+	"DEC",
+	"CLC",
+	"SEC",
+	"JMP",
+	"JSR",
+	"RTS",
+	"CMP",
+	"BEQ",
+	"BNE",
+	"HCF",
 }
 
 scan :: proc(source: string) -> (tokens: [dynamic]Token, success: bool) {
@@ -112,10 +144,20 @@ scan_identifier :: proc(scanner: ^Scanner) -> (token: Token, success: bool) {
 		break
 	}
 
+	kind :: proc(lexeme: string) -> TokenKind {
+		if slice.contains(mnemonics, lexeme) {
+			return .Mnemonic
+		} else if strings.ends_with(lexeme, ":") {
+			return .Label
+		} else {
+			return .Label
+		}
+	}
+
 	lexeme := strings.to_string(sb)
 	token = {
-		kind     = strings.ends_with(lexeme, ":") ? .Label : .Mnemonic,
-		lexeme   = strings.ends_with(lexeme, ":") ? lexeme[:len(lexeme) - 1] : strings.to_upper(lexeme, context.temp_allocator),
+		kind     = kind(strings.to_upper(lexeme, context.temp_allocator)),
+		lexeme   = strings.ends_with(lexeme, ":") ? strings.to_upper(lexeme[:len(lexeme) - 1], context.temp_allocator) : strings.to_upper(lexeme, context.temp_allocator),
 		position = position,
 	}
 	success = true

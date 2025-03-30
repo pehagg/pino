@@ -30,7 +30,7 @@ loop:
 
 ### Milestone: 0.1.0 "Unconference Edition"
 
-- [ ] feat: support for drawing basic shapes [vm] [emulator]
+- [ ] fix: decimal parsing
 - [ ] feat: support for for data blocks and variables [compiler]
 - [ ] feat: support for drawing sprites [vm] [emulator]
 - [ ] refactor: proper literal handling [scanner]
@@ -38,6 +38,7 @@ loop:
 - [ ] chore: clean up code using Karl's book as guidance [compiler] [emulator]
 - [ ] refactor: rename LIT to PSH [compiler]
 - [ ] feat: proper compiler errors [compiler]
+- [x] feat: support for drawing basic shapes [vm] [emulator]
 - [x] feat: support for comments [compiler]
 - [x] feat: support for text output [vm]
 - [x] feat: compile program file (assy) into binary (rom) [compiler]

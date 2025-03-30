@@ -21,7 +21,7 @@ parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool)
 	defer delete(pass1)
 
 	for token, index in tokens {
-		if token.kind == .Label {
+		if token.kind == .Label && !(token.lexeme in labels) {
 			labels[token.lexeme] = offset + vm.Address(index - len(labels))
 		} else {
 			append(&pass1, token)
@@ -31,7 +31,7 @@ parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool)
 	parser := Parser {
 		tokens   = pass1[:],
 		position = 0,
-		current  = tokens[0],
+		current  = pass1[0],
 	}
 
 	for {
@@ -99,11 +99,19 @@ parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool)
 			case "JMP":
 				append(&bytecode, vm.OP_JMP)
 				next(&parser)
-				address := labels[parser.current.lexeme]
-				hi := u8(address >> 8)
-				lo := u8(address)
-				append(&bytecode, hi)
-				append(&bytecode, lo)
+				if strings.starts_with(parser.current.lexeme, "$") {
+					address := parse_number(parser.current) or_return
+					hi := u8(address >> 8)
+					lo := u8(address)
+					append(&bytecode, hi)
+					append(&bytecode, lo)
+				} else {
+					address := labels[parser.current.lexeme]
+					hi := u8(address >> 8)
+					lo := u8(address)
+					append(&bytecode, hi)
+					append(&bytecode, lo)
+				}
 			case "JSR":
 				append(&bytecode, vm.OP_JSR)
 				next(&parser)
@@ -130,8 +138,7 @@ parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool)
 			case "BEQ":
 				append(&bytecode, vm.OP_BEQ)
 				next(&parser)
-				// FIXME: labels are parsed as mnemonics
-				address := labels[strings.to_lower(parser.current.lexeme, context.temp_allocator)]
+				address := labels[parser.current.lexeme]
 				hi := u8(address >> 8)
 				lo := u8(address)
 				append(&bytecode, hi)
@@ -139,8 +146,7 @@ parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool)
 			case "BNE":
 				append(&bytecode, vm.OP_BNE)
 				next(&parser)
-				// FIXME: labels are parsed as mnemonics
-				address := labels[strings.to_lower(parser.current.lexeme, context.temp_allocator)]
+				address := labels[parser.current.lexeme]
 				hi := u8(address >> 8)
 				lo := u8(address)
 				append(&bytecode, hi)
