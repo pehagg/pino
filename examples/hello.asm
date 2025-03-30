@@ -1,11 +1,13 @@
-  lit $68
-  jsr $ff00
-  lit $65
-  jsr $ff00
-  lit $6c
-  jsr $ff00
-  lit $6c
-  jsr $ff00
-  lit $6f
-  jsr $ff00
-  brk 
+;; print hello to stdout
+
+  lit $68   ; push 'h' to stack
+  jsr $ff00 ; call STDOUT
+  lit $65   ; push 'e' to stack
+  jsr $ff00 ; call STDOUT
+  lit $6c   ; push 'l' to stack 
+  jsr $ff00 ; call STDOUT
+  lit $6cS  ; push 'l' to stack
+  jsr $ff00 ; call STDOUT
+  lit $6f   ; push 'o' to stack
+  jsr $ff00 ; call STDOUT
+  brk

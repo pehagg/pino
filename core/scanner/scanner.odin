@@ -30,7 +30,15 @@ scan :: proc(source: string) -> (tokens: [dynamic]Token, success: bool) {
 		current  = rune(source[0]),
 	}
 
-	for {
+	main_loop: for {
+		if scanner.current == ';' {
+			inner: for scanner.current != '\n' {
+				if ok := advance(&scanner); ok {
+					continue inner
+				}
+			}
+		}
+
 		if unicode.is_white_space(scanner.current) {
 			if ok := advance(&scanner); ok {
 				continue
