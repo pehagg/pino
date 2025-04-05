@@ -2,6 +2,7 @@ package vm
 
 import "core:fmt"
 import "core:log"
+import "core:strings"
 import rl "vendor:raylib"
 
 OP_BRK :: 0x00 // Break
@@ -40,6 +41,7 @@ ADDR_BGNDRW :: 0xff01
 ADDR_ENDDRW :: 0xff02
 ADDR_PIXOUT :: 0xff03
 ADDR_LINOUT :: 0xff04
+ADDR_TXTOUT :: 0xff05
 
 PALETTE_BLACK :: 0x00
 PALETTE_WHITE :: 0x01
@@ -63,6 +65,7 @@ VirtualMachine :: struct {
 	mem:    [65536]u8, // 64k
 	pc:     Address,
 	status: StatusRegister,
+	font:   rl.Font,
 }
 
 push :: proc(vm: ^VirtualMachine, value: u8) {
@@ -112,6 +115,17 @@ call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 		start_y := pop(vm)
 		start_x := pop(vm)
 		rl.DrawLine(i32(start_x), i32(start_y), i32(end_x), i32(end_y), color(palette_color))
+	case ADDR_TXTOUT:
+		y := pop(vm)
+		x := pop(vm)
+		char := pop(vm)
+		position := rl.Vector2{f32(x), f32(y)}
+		bytes := []u8{char}
+		sb: strings.Builder
+		defer strings.builder_destroy(&sb)
+		strings.write_rune(&sb, rune(char))
+		cstr, _ := strings.to_cstring(&sb)
+		rl.DrawTextEx(vm.font, cstr, position, 8, 2, rl.WHITE)
 	case:
 		log.warn("invalid call to address:", address)
 		return false
@@ -144,6 +158,7 @@ update_status_flags :: proc(vm: ^VirtualMachine) {
 }
 
 evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
+	vm.font = rl.LoadFont("assets/fonts/SpaceMono-Regular.ttf")
 	for i in 0 ..< len(code) {
 		vm.mem[0x0100 + i] = code[i]
 	}
