@@ -37,11 +37,11 @@ OP_HCF :: 0xff // Halt execution
 Address :: distinct u16
 
 ADDR_CHROUT :: 0xff00
-ADDR_BGNDRW :: 0xff01
-ADDR_ENDDRW :: 0xff02
-ADDR_PIXOUT :: 0xff03
-ADDR_LINOUT :: 0xff04
-ADDR_TXTOUT :: 0xff05
+ADDR_BGNDRW :: 0xff10
+ADDR_ENDDRW :: 0xff11
+ADDR_PIXOUT :: 0xff12
+ADDR_LINOUT :: 0xff13
+ADDR_TXTOUT :: 0xff14
 
 PALETTE_BLACK :: 0x00
 PALETTE_WHITE :: 0x01
@@ -116,6 +116,7 @@ call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 		start_x := pop(vm)
 		rl.DrawLine(i32(start_x), i32(start_y), i32(end_x), i32(end_y), color(palette_color))
 	case ADDR_TXTOUT:
+		palette_color := pop(vm)
 		y := pop(vm)
 		x := pop(vm)
 		char := pop(vm)
@@ -125,7 +126,7 @@ call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 		defer strings.builder_destroy(&sb)
 		strings.write_rune(&sb, rune(char))
 		cstr, _ := strings.to_cstring(&sb)
-		rl.DrawTextEx(vm.font, cstr, position, 8, 2, rl.WHITE)
+		rl.DrawTextEx(vm.font, cstr, position, 8, 2, color(palette_color))
 	case:
 		log.warn("invalid call to address:", address)
 		return false

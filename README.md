@@ -43,3 +43,56 @@ loop:
 - [x] feat: support for text output [vm]
 - [x] feat: compile program file (assy) into binary (rom) [compiler]
 - [x] feat: run rom file [emulator]
+
+## Memory Map
+
+### Console
+
+#### FF00 CHROUT
+
+Print a character to standard output.
+
+(c --)
+
+c = ascii code for character to print
+
+#### BGNDRW Begin drawing (0xFF10)
+
+Begin drawing procedures. Must be called before drawing. End drawing with ENDDRW.
+
+#### ENDDRW End drawing (0xFF11)
+
+End drawing procedures.
+
+#### PIXOUT Draw a pixel to the screen (0xFF12)
+
+Draw a pixel to the screen using the specified color.
+
+(x y color --)
+
+x = x coordinate
+y = y coordinate
+color = color from palette
+
+#### LINOUT Draw line (0xFF13)
+
+Draw a line to the screen using specified color.
+
+(x1 y1 x2 y2 color --)
+
+x1 = starting x coordinate
+y1 = starting y coordinate
+x2 = ending x coordinate
+y2 = ending y coordinate
+color = color from palette
+
+#### TXTOUT Draw character to screen (0xFF14)
+
+Draw a character with predefined font to the screen.
+
+(char x y color --)
+
+char = ascii code for character being drawn
+x = x coordinate
+y = y coordinate
+color = color from palette
