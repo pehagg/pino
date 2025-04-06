@@ -2,9 +2,12 @@ package emulator
 
 import "../../core/vm"
 import "core:fmt"
+import "core:log"
 import "core:os"
 
 main :: proc() {
+	context.logger = log.create_console_logger()
+
 	if len(os.args) < 2 {
 		fmt.eprintln("usage: emulator ROMFILE")
 		os.exit(-1)
