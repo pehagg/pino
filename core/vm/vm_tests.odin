@@ -286,5 +286,15 @@ should_evaluate_fibonacci :: proc(t: ^testing.T) {
 	)
 	testing.expect(t, ok)
 	testing.expect_value(t, depth(vm), 14)
+}
 
+@(test)
+should_write_and_read_4 :: proc(t: ^testing.T) {
+	vm: VirtualMachine
+	write_4(&vm, 0xff20, 0x00c0ffee)
+	testing.expect_value(t, vm.mem[0xff20], 0x00)
+	testing.expect_value(t, vm.mem[0xff21], 0xc0)
+	testing.expect_value(t, vm.mem[0xff22], 0xff)
+	testing.expect_value(t, vm.mem[0xff23], 0xee)
+	testing.expect_value(t, read_4(vm, 0xff20), 0x00c0ffee)
 }

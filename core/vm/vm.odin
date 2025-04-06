@@ -42,6 +42,7 @@ ADDR_ENDDRW :: 0xff11
 ADDR_PIXOUT :: 0xff12
 ADDR_LINOUT :: 0xff13
 ADDR_TXTOUT :: 0xff14
+ADDR_PALETT :: 0xff20
 
 PALETTE_BLACK :: 0x00
 PALETTE_WHITE :: 0x01
@@ -90,8 +91,23 @@ read :: proc(vm: VirtualMachine, address: Address) -> u8 {
 	return vm.mem[address]
 }
 
+read_4 :: proc(vm: VirtualMachine, address: Address) -> u32 {
+	a := u32(read(vm, address + 0)) << 24
+	b := u32(read(vm, address + 1)) << 16
+	c := u32(read(vm, address + 2)) << 8
+	d := u32(read(vm, address + 3))
+	return a | b | c | d
+}
+
 write :: proc(vm: ^VirtualMachine, address: Address, value: u8) {
 	vm.mem[address] = value
+}
+
+write_4 :: proc(vm: ^VirtualMachine, address: Address, value: u32) {
+	write(vm, address + 0, u8(value >> 24))
+	write(vm, address + 1, u8(value >> 16))
+	write(vm, address + 2, u8(value >> 8))
+	write(vm, address + 3, u8(value))
 }
 
 call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
@@ -107,16 +123,17 @@ call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 		palette_color := pop(vm)
 		y := pop(vm)
 		x := pop(vm)
-		rl.DrawPixel(i32(x), i32(y), color(palette_color))
+		rl.DrawPixel(i32(x), i32(y), color(vm^, palette_color))
 	case ADDR_LINOUT:
 		palette_color := pop(vm)
 		end_y := pop(vm)
 		end_x := pop(vm)
 		start_y := pop(vm)
 		start_x := pop(vm)
-		rl.DrawLine(i32(start_x), i32(start_y), i32(end_x), i32(end_y), color(palette_color))
+		rl.DrawLine(i32(start_x), i32(start_y), i32(end_x), i32(end_y), color(vm^, palette_color))
 	case ADDR_TXTOUT:
 		palette_color := pop(vm)
+		color := color(vm^, palette_color)
 		y := pop(vm)
 		x := pop(vm)
 		char := pop(vm)
@@ -126,7 +143,7 @@ call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 		defer strings.builder_destroy(&sb)
 		strings.write_rune(&sb, rune(char))
 		cstr, _ := strings.to_cstring(&sb)
-		rl.DrawTextEx(vm.font, cstr, position, 8, 2, color(palette_color))
+		rl.DrawTextEx(vm.font, cstr, position, 8, 2, color)
 	case:
 		log.warn("invalid call to address:", address)
 		return false
@@ -160,6 +177,8 @@ update_status_flags :: proc(vm: ^VirtualMachine) {
 
 evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 	vm.font = rl.LoadFont("assets/fonts/SpaceMono-Regular.ttf")
+	init_colors(vm)
+
 	for i in 0 ..< len(code) {
 		vm.mem[0x0100 + i] = code[i]
 	}
@@ -324,17 +343,15 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 	}
 }
 
-color :: proc(palette: u8) -> rl.Color {
-	switch palette {
-	case PALETTE_BLACK:
-		return rl.BLACK
-	case PALETTE_WHITE:
-		return rl.WHITE
-	case PALETTE_RED:
-		return rl.RED
-	case PALETTE_CYAN:
-		return rl.Color{0x37, 0x84, 0x8b, 0xff}
-	case:
-		return rl.BLACK
-	}
+color :: proc(vm: VirtualMachine, palette: u8) -> rl.Color {
+	address := ADDR_PALETT + Address(palette * 4)
+	value := read_4(vm, address)
+	return rl.GetColor(value)
+}
+
+init_colors :: proc(vm: ^VirtualMachine) {
+	write_4(vm, ADDR_PALETT + 0, 0x000000ff) // black
+	write_4(vm, ADDR_PALETT + 4, 0xffffffff) // white
+	write_4(vm, ADDR_PALETT + 8, 0xff0000ff) // red
+	write_4(vm, ADDR_PALETT + 12, 0x37848bff) // cyan
 }

@@ -96,3 +96,7 @@ char = ascii code for character being drawn
 x = x coordinate
 y = y coordinate
 color = color from palette
+
+#### PALETTE (0xFF20 - 0xFF84)
+
+Color palette of 16 colors, in rgba format. The color codes themselves are not used, instead you use the index relative to the base address of 0xFF20.
