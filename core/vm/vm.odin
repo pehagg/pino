@@ -143,7 +143,7 @@ call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 		defer strings.builder_destroy(&sb)
 		strings.write_rune(&sb, rune(char))
 		cstr, _ := strings.to_cstring(&sb)
-		rl.DrawTextEx(vm.font, cstr, position, 8, 2, color)
+		rl.DrawTextEx(vm.font, cstr, position, 20, 0, color)
 	case:
 		log.warn("invalid call to address:", address)
 		return false
@@ -186,7 +186,7 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 	vm.sp = 0
 	vm.pc = 0x0100
 
-	rl.InitWindow(320, 200, "Pino")
+	rl.InitWindow(800, 600, "Pino")
 	rl.SetTargetFPS(60)
 	defer rl.CloseWindow()
 

@@ -8,22 +8,22 @@ draw:
   lit 3     ; cyan
   jsr $ff14 ; call TXTOUT
   lit $65   ; push 'e' to stack
-  lit 14    ; x=14
-  lit 8     ; y=8
-  lit 3     ; cyan
-  jsr $ff14 ; call TXTOUT
-  lit $6c   ; push 'l' to stack
   lit 20    ; x=20
   lit 8     ; y=8
   lit 3     ; cyan
   jsr $ff14 ; call TXTOUT
   lit $6c   ; push 'l' to stack
-  lit 26    ; x=26
+  lit 32    ; x=32
+  lit 8     ; y=8
+  lit 3     ; cyan
+  jsr $ff14 ; call TXTOUT
+  lit $6c   ; push 'l' to stack
+  lit 44    ; x=44
   lit 8     ; y=8
   lit 3     ; cyan
   jsr $ff14 ; call TXTOUT
   lit $6f   ; push 'o' to stack
-  lit 32    ; x=32
+  lit 56    ; x=56
   lit 8     ; y=8
   lit 3     ; cyan
   jsr $ff14 ; call TXTOUT
