@@ -27,7 +27,7 @@ main :: proc() {
 	machine: vm.VirtualMachine
 	machine.font = rl.LoadFont("assets/fonts/SpaceMono-Regular.ttf")
 
-	success := vm.evaluate(&machine, bytecode)
+	success := vm.evaluate(&machine, bytecode, false)
 	rl.CloseWindow()
 
 	if !success {
