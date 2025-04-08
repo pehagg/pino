@@ -2,6 +2,7 @@ package vm
 
 import "core:fmt"
 import "core:log"
+import "core:mem"
 import "core:strings"
 import rl "vendor:raylib"
 
@@ -42,7 +43,7 @@ ADDR_ENDDRW :: 0xff11
 ADDR_PIXOUT :: 0xff12
 ADDR_LINOUT :: 0xff13
 ADDR_TXTOUT :: 0xff14
-ADDR_PALETT :: 0xff20
+ADDR_PALETTE :: 0xff20
 
 StatusFlag :: enum {
 	N, // Negative
@@ -65,28 +66,88 @@ VirtualMachine :: struct {
 	font:     rl.Font,
 }
 
+/*
+Push value onto wprk stack.
+
+Increments stack pointer (sp), wraps in case of an overflow.
+
+Inputs:
+- vm: A pointer to VirtualMachine.
+- value: A value.
+*/
 push :: proc(vm: ^VirtualMachine, value: u8) {
 	vm.wst[vm.sp] = value
 	vm.sp += 1
 }
 
+/*
+Pop value off work stack.
+
+Decrements stack pointer (sp), wraps in case of underflow.
+
+Inputs:
+- vm: A pointer to a VirtualMachine. 
+
+Returns:
+- value: An value.
+*/
 pop :: proc(vm: ^VirtualMachine) -> u8 {
 	vm.sp -= 1
 	return vm.wst[vm.sp]
 }
 
+/*
+Peek top-most vlaue.
+
+Does not mutate stack pointer (sp).
+
+Inputs:
+- vm: A reference to a VirtualMachine
+
+Returns:
+- value: value of top-most item on stack.
+*/
 peek :: proc(vm: VirtualMachine) -> u8 {
 	return vm.wst[vm.sp - 1]
 }
 
+/*
+Return depth of stack (value of sp).
+
+Inputs:
+- vm: A reference to a VirtualMachine.
+
+Returns:
+- depth: Depth of stack
+*/
 depth :: proc(vm: VirtualMachine) -> u8 {
 	return vm.sp
 }
 
+/*
+Read value from memory.
+
+Inputs:
+- vm: A reference to a VirtualMachine.
+- address: Address to read from
+
+Returns:
+- value: Byte at given address.
+*/
 read :: proc(vm: VirtualMachine, address: Address) -> u8 {
 	return vm.mem[address]
 }
 
+/*
+Read four bytes from memory.
+
+Inputs:
+- vm: A reference to a VirtualMachine.
+- address: Address to read from
+
+Returns:
+- double word at given address.
+*/
 read_4 :: proc(vm: VirtualMachine, address: Address) -> u32 {
 	a := u32(read(vm, address + 0)) << 24
 	b := u32(read(vm, address + 1)) << 16
@@ -95,10 +156,26 @@ read_4 :: proc(vm: VirtualMachine, address: Address) -> u32 {
 	return a | b | c | d
 }
 
+/*
+Write a byte to address.
+
+Inputs:
+- vm: A pointer to a VirtualMachine.
+- address: Address to write to.
+- value: value to write.
+*/
 write :: proc(vm: ^VirtualMachine, address: Address, value: u8) {
 	vm.mem[address] = value
 }
 
+/*
+Write a double word to address.
+
+Inputs:
+- vm: A pointer to a VirtualMachine.
+- address: Address to write to.
+- value: value to write.
+*/
 write_4 :: proc(vm: ^VirtualMachine, address: Address, value: u32) {
 	write(vm, address + 0, u8(value >> 24))
 	write(vm, address + 1, u8(value >> 16))
@@ -106,6 +183,33 @@ write_4 :: proc(vm: ^VirtualMachine, address: Address, value: u32) {
 	write(vm, address + 3, u8(value))
 }
 
+/*
+Convert byte to cstring.
+
+Inputs:
+- char: byte to convert.
+
+Returns:
+- cstring: A cstring.
+*/
+to_cstring :: proc(char: u8) -> (cstring, mem.Allocator_Error) {
+	bytes := []u8{char}
+	sb: strings.Builder
+	defer strings.builder_destroy(&sb)
+	strings.write_rune(&sb, rune(char))
+	return strings.to_cstring(&sb)
+}
+
+/*
+Call a kernel function.
+
+Inputs:
+- vn: A pointer to a VirtualMachine.
+- address: Start address of kernel function.
+
+Returns:
+- success: true if the call was successful
+*/
 call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 	switch address {
 	case ADDR_CHROUT:
@@ -119,31 +223,32 @@ call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 		rl.EndDrawing()
 	case ADDR_PIXOUT:
 		if vm.headless do return false
-		palette_color := pop(vm)
+		palette_index := pop(vm)
 		y := pop(vm)
 		x := pop(vm)
-		rl.DrawPixel(i32(x), i32(y), color(vm^, palette_color))
+		rl.DrawPixel(i32(x), i32(y), color(vm^, palette_index))
 	case ADDR_LINOUT:
 		if vm.headless do return false
-		palette_color := pop(vm)
+		palette_index := pop(vm)
 		end_y := pop(vm)
 		end_x := pop(vm)
 		start_y := pop(vm)
 		start_x := pop(vm)
-		rl.DrawLine(i32(start_x), i32(start_y), i32(end_x), i32(end_y), color(vm^, palette_color))
+		rl.DrawLine(i32(start_x), i32(start_y), i32(end_x), i32(end_y), color(vm^, palette_index))
 	case ADDR_TXTOUT:
 		if vm.headless do return false
-		palette_color := pop(vm)
-		color := color(vm^, palette_color)
+		palette_index := pop(vm)
 		y := pop(vm)
 		x := pop(vm)
 		char := pop(vm)
+
+		cstr, err := to_cstring(char)
+		if err != .None {
+			return false
+		}
+
 		position := rl.Vector2{f32(x), f32(y)}
-		bytes := []u8{char}
-		sb: strings.Builder
-		defer strings.builder_destroy(&sb)
-		strings.write_rune(&sb, rune(char))
-		cstr, _ := strings.to_cstring(&sb)
+		color := color(vm^, palette_index)
 		rl.DrawTextEx(vm.font, cstr, position, 20, 0, color)
 	case:
 		log.warn("invalid call to address:", address)
@@ -153,12 +258,31 @@ call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 	return true
 }
 
+/*
+Fetch next instruction/operation.
+
+The procedure increments the program counter (pc).
+
+Inputs:
+- vm: A pointer to a VirtualMachine.
+
+Returns:
+- op: next operation
+*/
 fetch :: proc(vm: ^VirtualMachine) -> u8 {
 	op := vm.mem[vm.pc]
 	vm.pc += 1
 	return op
 }
 
+/*
+Update status flags.
+
+Updates the status register based on top-most value in stack.
+
+Inputs:
+- vm: A pointer to a VirtualMachine.
+*/
 update_status_flags :: proc(vm: ^VirtualMachine) {
 	value := peek(vm^)
 
@@ -176,20 +300,40 @@ update_status_flags :: proc(vm: ^VirtualMachine) {
 	}
 }
 
-color :: proc(vm: VirtualMachine, palette: u8) -> rl.Color {
-	address := ADDR_PALETT + Address(palette * 4)
+/*
+Look up color from palette.
+
+Inputs:
+- vm: a reference to a VirtualMachine.
+- index: palette index.
+
+Returns:
+- color: Color from palette.
+*/
+color :: proc(vm: VirtualMachine, index: u8) -> rl.Color {
+	address := ADDR_PALETTE + Address(index * 4)
 	value := read_4(vm, address)
 	return rl.GetColor(value)
 }
 
+/*
+Evaluate bytecode.
+
+Inputs:
+- vm: Pointer to VirtualMachine.
+- headless: run vm in headless mode, defaults to true.
+
+Returns:
+- success: true if evluation was successful.
+*/
 evaluate :: proc(vm: ^VirtualMachine, code: []u8, headless: bool = true) -> bool {
 	vm.headless = headless
 
 	// initialize colors
-	write_4(vm, ADDR_PALETT + 0, 0x000000ff) // black
-	write_4(vm, ADDR_PALETT + 4, 0xffffffff) // white
-	write_4(vm, ADDR_PALETT + 8, 0xff0000ff) // red
-	write_4(vm, ADDR_PALETT + 12, 0x37848bff) // cyan
+	write_4(vm, ADDR_PALETTE + 0, 0x000000ff) // black
+	write_4(vm, ADDR_PALETTE + 4, 0xffffffff) // white
+	write_4(vm, ADDR_PALETTE + 8, 0xff0000ff) // red
+	write_4(vm, ADDR_PALETTE + 12, 0x37848bff) // cyan
 
 	// copy bytecode to memory at 0x0100 (page 2)
 	for i in 0 ..< len(code) {
@@ -201,6 +345,7 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8, headless: bool = true) -> bool
 	vm.pc = 0x0100
 	vm.rp = 0
 
+	// main loop
 	for {
 		if !vm.headless && rl.WindowShouldClose() {
 			return true
