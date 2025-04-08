@@ -44,11 +44,6 @@ ADDR_LINOUT :: 0xff13
 ADDR_TXTOUT :: 0xff14
 ADDR_PALETT :: 0xff20
 
-PALETTE_BLACK :: 0x00
-PALETTE_WHITE :: 0x01
-PALETTE_RED :: 0x02
-PALETTE_CYAN :: 0x03
-
 StatusFlag :: enum {
 	N, // Negative
 	V, // Overflow
