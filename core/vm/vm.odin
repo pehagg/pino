@@ -54,14 +54,15 @@ StatusFlag :: enum {
 StatusRegister :: bit_set[StatusFlag;u8]
 
 VirtualMachine :: struct {
-	wst:    [256]u8,
-	sp:     u8,
-	rst:    [256]Address,
-	rp:     u8,
-	mem:    [65536]u8, // 64k
-	pc:     Address,
-	status: StatusRegister,
-	font:   rl.Font,
+	wst:      [256]u8,
+	sp:       u8,
+	rst:      [256]Address,
+	rp:       u8,
+	mem:      [65536]u8, // 64k
+	pc:       Address,
+	status:   StatusRegister,
+	headless: bool,
+	font:     rl.Font,
 }
 
 push :: proc(vm: ^VirtualMachine, value: u8) {
@@ -111,15 +112,19 @@ call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 		char := pop(vm)
 		fmt.print(rune(char))
 	case ADDR_BGNDRW:
+		if vm.headless do return false
 		rl.BeginDrawing()
 	case ADDR_ENDDRW:
+		if vm.headless do return false
 		rl.EndDrawing()
 	case ADDR_PIXOUT:
+		if vm.headless do return false
 		palette_color := pop(vm)
 		y := pop(vm)
 		x := pop(vm)
 		rl.DrawPixel(i32(x), i32(y), color(vm^, palette_color))
 	case ADDR_LINOUT:
+		if vm.headless do return false
 		palette_color := pop(vm)
 		end_y := pop(vm)
 		end_x := pop(vm)
@@ -127,6 +132,7 @@ call :: proc(vm: ^VirtualMachine, address: Address) -> bool {
 		start_x := pop(vm)
 		rl.DrawLine(i32(start_x), i32(start_y), i32(end_x), i32(end_y), color(vm^, palette_color))
 	case ADDR_TXTOUT:
+		if vm.headless do return false
 		palette_color := pop(vm)
 		color := color(vm^, palette_color)
 		y := pop(vm)
@@ -170,23 +176,33 @@ update_status_flags :: proc(vm: ^VirtualMachine) {
 	}
 }
 
-evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
-	vm.font = rl.LoadFont("assets/fonts/SpaceMono-Regular.ttf")
-	init_colors(vm)
+color :: proc(vm: VirtualMachine, palette: u8) -> rl.Color {
+	address := ADDR_PALETT + Address(palette * 4)
+	value := read_4(vm, address)
+	return rl.GetColor(value)
+}
 
+evaluate :: proc(vm: ^VirtualMachine, code: []u8, headless: bool = true) -> bool {
+	vm.headless = headless
+
+	// initialize colors
+	write_4(vm, ADDR_PALETT + 0, 0x000000ff) // black
+	write_4(vm, ADDR_PALETT + 4, 0xffffffff) // white
+	write_4(vm, ADDR_PALETT + 8, 0xff0000ff) // red
+	write_4(vm, ADDR_PALETT + 12, 0x37848bff) // cyan
+
+	// copy bytecode to memory at 0x0100 (page 2)
 	for i in 0 ..< len(code) {
 		vm.mem[0x0100 + i] = code[i]
 	}
 
+	// reset pointers
 	vm.sp = 0
 	vm.pc = 0x0100
-
-	rl.InitWindow(800, 600, "Pino")
-	rl.SetTargetFPS(60)
-	defer rl.CloseWindow()
+	vm.rp = 0
 
 	for {
-		if rl.WindowShouldClose() {
+		if !vm.headless && rl.WindowShouldClose() {
 			return true
 		}
 
@@ -290,7 +306,7 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 			lo := Address(fetch(vm))
 			address := hi | lo
 
-			// Call Kernal if address is greater or equal to 0xff00
+			// Call Kernel if address is greater or equal to 0xff00
 			if address >= 0xff00 {
 				call(vm, address) or_return
 				continue
@@ -336,17 +352,4 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8) -> bool {
 			return false
 		}
 	}
-}
-
-color :: proc(vm: VirtualMachine, palette: u8) -> rl.Color {
-	address := ADDR_PALETT + Address(palette * 4)
-	value := read_4(vm, address)
-	return rl.GetColor(value)
-}
-
-init_colors :: proc(vm: ^VirtualMachine) {
-	write_4(vm, ADDR_PALETT + 0, 0x000000ff) // black
-	write_4(vm, ADDR_PALETT + 4, 0xffffffff) // white
-	write_4(vm, ADDR_PALETT + 8, 0xff0000ff) // red
-	write_4(vm, ADDR_PALETT + 12, 0x37848bff) // cyan
 }

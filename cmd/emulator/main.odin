@@ -4,6 +4,7 @@ import "../../core/vm"
 import "core:fmt"
 import "core:log"
 import "core:os"
+import rl "vendor:raylib"
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -20,8 +21,15 @@ main :: proc() {
 		os.exit(-2)
 	}
 
+	rl.InitWindow(800, 600, "Pino")
+	rl.SetTargetFPS(60)
+
 	machine: vm.VirtualMachine
+	machine.font = rl.LoadFont("assets/fonts/SpaceMono-Regular.ttf")
+
 	success := vm.evaluate(&machine, bytecode)
+	rl.CloseWindow()
+
 	if !success {
 		os.exit(-3)
 	}
