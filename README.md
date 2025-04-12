@@ -35,8 +35,8 @@ loop:
 - [ ] refactor: proper literal handling [scanner]
 - [ ] refactor: use proper allocators [compiler] [emulator]
 - [ ] chore: clean up code using Karl's book as guidance [compiler] [emulator]
-- [ ] refactor: rename LIT to PSH [compiler]
 - [ ] feat: proper compiler errors [compiler]
+- [x] refactor: rename LIT to PSH and DRP to POP [compiler]
 - [x] fix: decimal parsing
 - [x] feat: support for drawing basic shapes [vm] [emulator]
 - [x] feat: support for comments [compiler]

@@ -7,8 +7,8 @@ import "core:strings"
 import rl "vendor:raylib"
 
 OP_BRK :: 0x00 // Break
-OP_LIT :: 0x01 // Push literal (1 byte) to stack ( -- a)
-OP_DRP :: 0x02 // Drop top-most item from stack (a b -- a)
+OP_PSH :: 0x01 // Push literal (1 byte) to stack ( -- a)
+OP_POP :: 0x02 // Drop top-most item from stack (a b -- a)
 OP_DUP :: 0x03 // Duplicate top-most item in stack (a -- a a)
 OP_SWP :: 0x04 // Swap two top-most items (a b -- b a)
 OP_OVR :: 0x05 // Push second to top-most item to top (a b -- a b a)
@@ -355,10 +355,10 @@ evaluate :: proc(vm: ^VirtualMachine, code: []u8, headless: bool = true) -> bool
 		switch op {
 		case OP_BRK:
 			return true
-		case OP_LIT:
+		case OP_PSH:
 			literal := fetch(vm)
 			push(vm, literal)
-		case OP_DRP:
+		case OP_POP:
 			pop(vm)
 		case OP_DUP:
 			value := pop(vm)

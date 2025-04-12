@@ -1,13 +1,13 @@
 ;; print hello to stdout
 
-  lit $68   ; push 'h' to stack
+  psh $68   ; push 'h' to stack
   jsr $ff00 ; call CHROUT
-  lit $65   ; push 'e' to stack
+  psh $65   ; push 'e' to stack
   jsr $ff00 ; call CHROUT
-  lit $6c   ; push 'l' to stack 
+  psh $6c   ; push 'l' to stack 
   jsr $ff00 ; call CHROUT
-  lit $6cS  ; push 'l' to stack
+  psh $6cS  ; push 'l' to stack
   jsr $ff00 ; call CHROUT
-  lit $6f   ; push 'o' to stack
+  psh $6f   ; push 'o' to stack
   jsr $ff00 ; call CHROUT
   brk

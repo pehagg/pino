@@ -6,8 +6,8 @@ import "core:testing"
 @(test)
 should_scan :: proc(t: ^testing.T) {
 	source := `
-      lit $0
-      lit 1
+      psh $0
+      psh 1
     loop:
       ovr
       ovr

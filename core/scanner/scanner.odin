@@ -26,8 +26,8 @@ TokenKind :: enum {
 
 mnemonics :: []string {
 	"BRK",
-	"LIT",
-	"DRP",
+	"PSH",
+	"POP",
 	"DUP",
 	"SWP",
 	"OVR",

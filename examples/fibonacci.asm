@@ -1,6 +1,6 @@
 ;; compute the first 14 numbers in the Fibonacci sequence
-  lit $0
-  lit 1
+  psh $0
+  psh 1
 loop:
   ovr       ; (0 1 -- 0 1 0)
   ovr       ; (0 1 0 -- 0 1 0 1)

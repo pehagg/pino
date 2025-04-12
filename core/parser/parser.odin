@@ -39,13 +39,13 @@ parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool)
 			switch parser.current.lexeme {
 			case "BRK":
 				append(&bytecode, vm.OP_BRK)
-			case "LIT":
-				append(&bytecode, vm.OP_LIT)
+			case "PSH":
+				append(&bytecode, vm.OP_PSH)
 				next(&parser)
 				number := parse_number(parser.current) or_return
 				append(&bytecode, u8(number))
-			case "DRP":
-				append(&bytecode, vm.OP_DRP)
+			case "POP":
+				append(&bytecode, vm.OP_POP)
 			case "DUP":
 				append(&bytecode, vm.OP_DUP)
 			case "SWP":
