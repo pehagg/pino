@@ -317,6 +317,55 @@ color :: proc(vm: VirtualMachine, index: u8) -> rl.Color {
 }
 
 /*
+Perform hard reset.
+
+This procedure resets the vm to it's startup state.
+
+Inputs:
+- vmL A ponter to a VirtualMachine
+*/
+reset :: proc(vm: ^VirtualMachine) {
+	// reset pointers
+	vm.sp = 0
+	vm.pc = 0x0100
+	vm.rp = 0
+
+	// initialize standard palette
+	write_4(vm, ADDR_PALETTE + 0, 0x000000ff) // Black
+	write_4(vm, ADDR_PALETTE + 4, 0xffffffff) // White
+	write_4(vm, ADDR_PALETTE + 8, 0x00ffffff) // Cyan
+	write_4(vm, ADDR_PALETTE + 12, 0x880000ff) // Red
+	write_4(vm, ADDR_PALETTE + 16, 0x8a1789ff) // Purple
+	write_4(vm, ADDR_PALETTE + 20, 0x2020ffff) // Blue
+	write_4(vm, ADDR_PALETTE + 24, 0xffec00ff) // Yellow
+	write_4(vm, ADDR_PALETTE + 28, 0xe06000ff) // Orange
+	write_4(vm, ADDR_PALETTE + 32, 0x604000ff) // Brown
+	write_4(vm, ADDR_PALETTE + 36, 0xff4040ff) // Light Red
+	write_4(vm, ADDR_PALETTE + 40, 0x404040ff) // Dark Gray
+	write_4(vm, ADDR_PALETTE + 44, 0x808080ff) // Medium Gray
+	write_4(vm, ADDR_PALETTE + 48, 0x60ff60ff) // Light Green
+	write_4(vm, ADDR_PALETTE + 52, 0x409effff) // Light Blue
+	write_4(vm, ADDR_PALETTE + 56, 0xc0c0c0ff) // Light Gray
+	write_4(vm, ADDR_PALETTE + 60, 0x009000ff) // Green
+	write_4(vm, ADDR_PALETTE + 64, 0xff00ffff) // Magenta
+	write_4(vm, ADDR_PALETTE + 68, 0xffbb80ff) // Peach
+	write_4(vm, ADDR_PALETTE + 72, 0x0047abff) // Cobalt
+	write_4(vm, ADDR_PALETTE + 76, 0xab4642ff) // Brick Red
+	write_4(vm, ADDR_PALETTE + 80, 0x242461ff) // Navy
+	write_4(vm, ADDR_PALETTE + 84, 0x008080ff) // Teal
+	write_4(vm, ADDR_PALETTE + 88, 0x80ff00ff) // Lime
+	write_4(vm, ADDR_PALETTE + 92, 0x800000ff) // Maroon
+	write_4(vm, ADDR_PALETTE + 96, 0x808000ff) // Olive
+	write_4(vm, ADDR_PALETTE + 100, 0xbc9cffff) // Lavender
+	write_4(vm, ADDR_PALETTE + 104, 0xff80c0ff) // Pink
+	write_4(vm, ADDR_PALETTE + 108, 0xffbf00ff) // Amber
+	write_4(vm, ADDR_PALETTE + 112, 0x87ceebff) // Sky Blue
+	write_4(vm, ADDR_PALETTE + 116, 0x228b22ff) // Forest Green
+	write_4(vm, ADDR_PALETTE + 120, 0x4b0082ff) // Indigo
+	write_4(vm, ADDR_PALETTE + 124, 0x4682b4ff) // Steel Blue
+}
+
+/*
 Evaluate bytecode.
 
 Inputs:
@@ -329,21 +378,12 @@ Returns:
 evaluate :: proc(vm: ^VirtualMachine, code: []u8, headless: bool = true) -> bool {
 	vm.headless = headless
 
-	// initialize colors
-	write_4(vm, ADDR_PALETTE + 0, 0x000000ff) // black
-	write_4(vm, ADDR_PALETTE + 4, 0xffffffff) // white
-	write_4(vm, ADDR_PALETTE + 8, 0xff0000ff) // red
-	write_4(vm, ADDR_PALETTE + 12, 0x37848bff) // cyan
+	reset(vm)
 
 	// copy bytecode to memory at 0x0100 (page 2)
 	for i in 0 ..< len(code) {
 		vm.mem[0x0100 + i] = code[i]
 	}
-
-	// reset pointers
-	vm.sp = 0
-	vm.pc = 0x0100
-	vm.rp = 0
 
 	// main loop
 	for {

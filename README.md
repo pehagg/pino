@@ -30,6 +30,7 @@ loop:
 
 ### Milestone: 0.1.0 "Unconference Edition"
 
+- [ ] fix: word-width x and y coordinates
 - [ ] feat: support for for data blocks and variables [compiler]
 - [ ] feat: support for drawing sprites [vm] [emulator]
 - [ ] refactor: proper literal handling [scanner]
@@ -97,6 +98,6 @@ x = x coordinate
 y = y coordinate
 color = color from palette
 
-#### PALETTE (0xFF20 - 0xFF84)
+#### PALETTE (0xFF20 - 0xFFA0
 
-Color palette of 16 colors, in rgba format. The color codes themselves are not used, instead you use the index relative to the base address of 0xFF20.
+Color palette of 32 colors, in rgba format. The color codes themselves are not used, instead you use the index relative to the base address of 0xFF20.
