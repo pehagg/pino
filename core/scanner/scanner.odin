@@ -22,6 +22,8 @@ TokenKind :: enum {
 	Number,
 	Mnemonic,
 	Label,
+	Data,
+	Variable,
 }
 
 mnemonics :: []string {
@@ -53,6 +55,8 @@ mnemonics :: []string {
 	"BEQ",
 	"BNE",
 	"HCF",
+	"DATA",
+	"VAR",
 }
 
 scan :: proc(source: string) -> (tokens: [dynamic]Token, success: bool) {
@@ -146,6 +150,11 @@ scan_identifier :: proc(scanner: ^Scanner) -> (token: Token, success: bool) {
 
 	kind :: proc(lexeme: string) -> TokenKind {
 		if slice.contains(mnemonics, lexeme) {
+			if lexeme == "DATA" {
+				return .Data
+			} else if lexeme == "VAR" {
+				return .Variable
+			}
 			return .Mnemonic
 		} else if strings.ends_with(lexeme, ":") {
 			return .Label
