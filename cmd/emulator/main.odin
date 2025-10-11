@@ -34,6 +34,6 @@ main :: proc() {
 		os.exit(-3)
 	}
 
-	retval := vm.depth(machine) > 0 ? vm.peek(machine) : 0
+	retval := vm.depth(machine) > 0 ? vm.peek(machine) : vm.Cell(0)
 	os.exit(int(retval))
 }

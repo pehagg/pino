@@ -25,8 +25,17 @@ TokenKind :: enum {
 }
 
 mnemonics :: []string {
+	// System
 	"BRK",
-	"PSH",
+	"HCF",
+	
+	// Multi-width push operations
+	"PSHB",
+	"PSHW", 
+	"PSHD",
+	"PSHQ",
+	
+	// Stack operations
 	"POP",
 	"DUP",
 	"SWP",
@@ -34,25 +43,34 @@ mnemonics :: []string {
 	"ROT",
 	"NIP",
 	"TCK",
-	"LDZ",
-	"STZ",
-	"LDA",
-	"STA",
+	
+	// Multi-width load operations
+	"LDB",
+	"LDW",
+	"LDD", 
+	"LDQ",
+	
+	// Multi-width store operations
+	"STB",
+	"STW",
+	"STD",
+	"STQ",
+	
+	// Arithmetic operations
 	"ADD",
 	"SUB",
-	"MUK",
+	"MUL",
 	"DIV",
 	"INC",
 	"DEC",
-	"CLC",
-	"SEC",
+	
+	// Control flow
 	"JMP",
 	"JSR",
 	"RTS",
 	"CMP",
 	"BEQ",
 	"BNE",
-	"HCF",
 }
 
 scan :: proc(source: string) -> (tokens: [dynamic]Token, success: bool) {

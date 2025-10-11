@@ -1,13 +1,13 @@
 ;; print hello to stdout
 
-  psh $68   ; push 'h' to stack
-  jsr $ff00 ; call CHROUT
-  psh $65   ; push 'e' to stack
-  jsr $ff00 ; call CHROUT
-  psh $6c   ; push 'l' to stack 
-  jsr $ff00 ; call CHROUT
-  psh $6cS  ; push 'l' to stack
-  jsr $ff00 ; call CHROUT
-  psh $6f   ; push 'o' to stack
-  jsr $ff00 ; call CHROUT
+  pshb $68   ; push 'h' byte to stack (becomes Cell)
+  jsr $ff00  ; call CHROUT
+  pshb $65   ; push 'e' byte to stack
+  jsr $ff00  ; call CHROUT
+  pshb $6c   ; push 'l' byte to stack 
+  jsr $ff00  ; call CHROUT
+  pshb $6c   ; push 'l' byte to stack (fixed typo)
+  jsr $ff00  ; call CHROUT
+  pshb $6f   ; push 'o' byte to stack
+  jsr $ff00  ; call CHROUT
   brk

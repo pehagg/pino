@@ -39,11 +39,41 @@ parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool)
 			switch parser.current.lexeme {
 			case "BRK":
 				append(&bytecode, vm.OP_BRK)
-			case "PSH":
-				append(&bytecode, vm.OP_PSH)
+
+			// Multi-width push operations
+			case "PSHB":
+				append(&bytecode, vm.OP_PSHB)
 				next(&parser)
 				number := parse_number(parser.current) or_return
-				append(&bytecode, u8(number))
+				append(&bytecode, u8(number))  // 1 byte
+				
+			case "PSHW":
+				append(&bytecode, vm.OP_PSHW)
+				next(&parser)
+				number := parse_number(parser.current) or_return
+				value := vm.Word(number)
+				append(&bytecode, u8(value >> 8))   // High byte
+				append(&bytecode, u8(value))        // Low byte
+				
+			case "PSHD":
+				append(&bytecode, vm.OP_PSHD)
+				next(&parser)
+				number := parse_number(parser.current) or_return
+				value := vm.DWord(number)
+				for i in 0..<4 {
+					append(&bytecode, u8(value >> vm.DWord(8 * (3-i))))
+				}
+				
+			case "PSHQ":
+				append(&bytecode, vm.OP_PSHQ)
+				next(&parser)
+				number := parse_number(parser.current) or_return
+				value := vm.Cell(number)
+				for i in 0..<8 {
+					append(&bytecode, u8(value >> vm.Cell(8 * (7-i))))
+				}
+
+			// Stack operations
 			case "POP":
 				append(&bytecode, vm.OP_POP)
 			case "DUP":
@@ -58,32 +88,82 @@ parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool)
 				append(&bytecode, vm.OP_NIP)
 			case "TCK":
 				append(&bytecode, vm.OP_TCK)
-			case "LDZ":
-				append(&bytecode, vm.OP_LDZ)
+
+			// Multi-width load operations
+			case "LDB":
+				append(&bytecode, vm.OP_LDB)
 				next(&parser)
 				address := parse_number(parser.current) or_return
-				append(&bytecode, u8(address))
-			case "STZ":
-				append(&bytecode, vm.OP_STZ)
-				next(&parser)
-				address := parse_number(parser.current) or_return
-				append(&bytecode, u8(address))
-			case "LDA":
-				append(&bytecode, vm.OP_LDA)
-				next(&parser)
-				address := parse_number(parser.current) or_return
-				hi := u8(address) << 8
+				hi := u8(address >> 8)
 				lo := u8(address)
 				append(&bytecode, hi)
 				append(&bytecode, lo)
-			case "STA":
-				append(&bytecode, vm.OP_STA)
+
+			case "LDW":
+				append(&bytecode, vm.OP_LDW)
 				next(&parser)
 				address := parse_number(parser.current) or_return
-				hi := u8(address) << 8
+				hi := u8(address >> 8)
 				lo := u8(address)
 				append(&bytecode, hi)
 				append(&bytecode, lo)
+
+			case "LDD":
+				append(&bytecode, vm.OP_LDD)
+				next(&parser)
+				address := parse_number(parser.current) or_return
+				hi := u8(address >> 8)
+				lo := u8(address)
+				append(&bytecode, hi)
+				append(&bytecode, lo)
+
+			case "LDQ":
+				append(&bytecode, vm.OP_LDQ)
+				next(&parser)
+				address := parse_number(parser.current) or_return
+				hi := u8(address >> 8)
+				lo := u8(address)
+				append(&bytecode, hi)
+				append(&bytecode, lo)
+
+			// Multi-width store operations
+			case "STB":
+				append(&bytecode, vm.OP_STB)
+				next(&parser)
+				address := parse_number(parser.current) or_return
+				hi := u8(address >> 8)
+				lo := u8(address)
+				append(&bytecode, hi)
+				append(&bytecode, lo)
+
+			case "STW":
+				append(&bytecode, vm.OP_STW)
+				next(&parser)
+				address := parse_number(parser.current) or_return
+				hi := u8(address >> 8)
+				lo := u8(address)
+				append(&bytecode, hi)
+				append(&bytecode, lo)
+
+			case "STD":
+				append(&bytecode, vm.OP_STD)
+				next(&parser)
+				address := parse_number(parser.current) or_return
+				hi := u8(address >> 8)
+				lo := u8(address)
+				append(&bytecode, hi)
+				append(&bytecode, lo)
+
+			case "STQ":
+				append(&bytecode, vm.OP_STQ)
+				next(&parser)
+				address := parse_number(parser.current) or_return
+				hi := u8(address >> 8)
+				lo := u8(address)
+				append(&bytecode, hi)
+				append(&bytecode, lo)
+
+			// Arithmetic operations
 			case "ADD":
 				append(&bytecode, vm.OP_ADD)
 			case "SUB":
@@ -96,6 +176,8 @@ parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool)
 				append(&bytecode, vm.OP_INC)
 			case "DEC":
 				append(&bytecode, vm.OP_DEC)
+
+			// Control flow
 			case "JMP":
 				append(&bytecode, vm.OP_JMP)
 				next(&parser)
@@ -132,9 +214,6 @@ parse :: proc(tokens: []scanner.Token) -> (bytecode: [dynamic]u8, success: bool)
 				append(&bytecode, vm.OP_RTS)
 			case "CMP":
 				append(&bytecode, vm.OP_CMP)
-				next(&parser)
-				number := parse_number(parser.current) or_return
-				append(&bytecode, u8(number))
 			case "BEQ":
 				append(&bytecode, vm.OP_BEQ)
 				next(&parser)

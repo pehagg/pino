@@ -6,13 +6,15 @@ import "core:testing"
 @(test)
 should_scan :: proc(t: ^testing.T) {
 	source := `
-      psh $0
-      psh 1
+      pshb 0
+      pshb 1
     loop:
       ovr
       ovr
       add
-      cmp $e9
+      dup
+      pshb 233
+      cmp
       bne loop
       brk
   `
@@ -20,5 +22,5 @@ should_scan :: proc(t: ^testing.T) {
 	defer delete(tokens)
 
 	testing.expect(t, ok)
-	testing.expect_value(t, len(tokens), 13)
+	testing.expect_value(t, len(tokens), 15)
 }

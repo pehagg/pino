@@ -7,15 +7,17 @@ A tiny stack-based virtual machine.
 The lowest level of programming Pino is on the bytecode level. For this we have a simple assembler like language, inspired by 6502 assembly. Here's an example of computing the first 14 digits of the Fibonacci sequence.
 
 ```
-  lit $0    ; (-- 0)
-  lit $1    ; (0 -- 0 1)
+  pshb $0    ; (-- 0)
+  pshb $1    ; (0 -- 0 1)
 loop:
   ovr       ; (0 1 -- 0 1 0)
   ovr       ; (0 1 0 -- 0 1 0 1)
   add       ; (0 1 0 1 -- 0 1 1)
-  cmp $e9   ; are we at 233?
+  dup       ; (0 1 1 -- 0 1 1 1)
+  pshb 233  ; are we at 233?
+  cmp       ;
   bne loop  ; nope, go back
-  brk       ;
+  brk       ; end execution
 ```
 
 ## Tasks
@@ -28,7 +30,7 @@ loop:
 
 - [ ] epic: support for strings [vm] [compiler]
 
-### Milestone: 0.1.0 "Unconference Edition"
+### Milestone: 0.1.0 "Hello, World!"
 
 - [ ] fix: word-width x and y coordinates
 - [ ] feat: support for for data blocks and variables [compiler]
